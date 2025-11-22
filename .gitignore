@@ -1,0 +1,13 @@
+*/__pycache__/
+*.pyc
+.env
+.venv/
+app/observers/__pycache__/
+app/observers/*.pyc
+app/services/__pycache__/
+app/services/*.pyc
+app/models/__pycache__/
+app/models/*.pyc
+tests/__pycache__/
+tests/*.pyc
+data/clinic.db
