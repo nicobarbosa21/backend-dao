@@ -13,14 +13,11 @@ class PatientObserver(Observer):
         self.email_client = email_client
 
     def update(self, data: str) -> None:
-        subject = "Recordatorio de turno"
-        body = f"Hola {self.name},\n\n{data}\n\nConsultorio Médico."
-        self.email_client.send_email(self.email, subject, body)
+        subject = "Recordatorio de turno medico"
+        self.email_client.send_email(self.email, subject, data)
 
 
 class ReminderSubject(Subject):
-    """Sujeto que notifica a los observadores (pacientes) mensajes de recordatorio."""
-
     def __init__(self) -> None:
         super().__init__()
 
@@ -39,20 +36,36 @@ class ReminderService:
         self.lead_times: List[timedelta] = list(lead_times)
 
     def schedule_reminders(
-        self, appointment_dt: datetime, patient_name: str, patient_email: str
+        self,
+        appointment_dt: datetime,
+        patient_name: str,
+        patient_email: str,
+        doctor_name: str,
+        specialty: str,
     ) -> List[threading.Timer]:
-        """Programa timers en memoria; suficiente para la demo y tests."""
         subject = ReminderSubject()
         subject.attach(PatientObserver(patient_name, patient_email, self.email_client))
+
+        date_str = appointment_dt.strftime("%Y-%m-%d")
+        time_str = appointment_dt.strftime("%H:%M")
+        confirmation_msg = (
+            f"Confirmamos su reserva del turno con {doctor_name} de {specialty} el {date_str} a las {time_str}.\n"
+            "Lo esperamos!\nConsultorio Médico Privado - Chacabuco 1244, Nueva Córdoba, Córdoba."
+        )
+        subject.notify(f"Hola {patient_name},\n\n{confirmation_msg}")
+
         timers: List[threading.Timer] = []
         now = datetime.now()
         for lead in self.lead_times:
             delay_seconds = (appointment_dt - lead - now).total_seconds()
             if delay_seconds <= 0:
-                # Si ya pasó la ventana, notifica de inmediato.
-                subject.notify(f"Tienes un turno el {appointment_dt.isoformat(sep=' ', timespec='minutes')}.")
-                continue
-            message = f"Falta {self._humanize_delta(lead)} para tu turno el {appointment_dt.isoformat(sep=' ', timespec='minutes')}."
+                continue  # No duplicar recordatorios pasados
+            message = (
+                f"Hola {patient_name},\n\n"
+                f"Falta {self._humanize_delta(lead)} para tu turno con {doctor_name} de {specialty} "
+                f"el {date_str} a las {time_str}.\n"
+                "Lo esperamos!\nConsultorio Médico Privado - Chacabuco 1244, Nueva Córdoba, Córdoba."
+            )
             timer = threading.Timer(delay_seconds, subject.notify, args=(message,))
             timer.daemon = True
             timer.start()
