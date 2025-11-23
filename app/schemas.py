@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field, validator
@@ -36,40 +36,62 @@ class Doctor(DoctorCreate):
 
 class AvailabilityCreate(BaseModel):
     medico_id: int
-    dia_semana: int = Field(..., ge=0, le=6, description="0=lunes, 6=domingo")
+    fecha: date
     hora_inicio: str = Field(..., regex=r"^\d{2}:\d{2}$")
     hora_fin: str = Field(..., regex=r"^\d{2}:\d{2}$")
+
+    @validator("hora_inicio")
+    def validate_hora_inicio(cls, v):
+        try:
+            datetime.strptime(v, "%H:%M").time()
+        except ValueError:
+            raise ValueError("hora_inicio debe estar entre 00:00 y 23:59 (HH:MM)")
+        return v
 
     @validator("hora_fin")
     def validate_range(cls, v, values):
         start = values.get("hora_inicio")
-        if start and v <= start:
+        try:
+            end_time = datetime.strptime(v, "%H:%M").time()
+            start_time = datetime.strptime(start, "%H:%M").time() if start else None
+        except ValueError:
+            raise ValueError("hora_fin debe estar entre 00:00 y 23:59 (HH:MM)")
+
+        if start_time and end_time <= start_time:
             raise ValueError("hora_fin debe ser mayor que hora_inicio")
         return v
 
 
 class Availability(AvailabilityCreate):
     id: int
+    activa: bool = True
 
 
 class AppointmentCreate(BaseModel):
     paciente_id: int
     medico_id: int
+    disponibilidad_id: int
     fecha: datetime
-    duracion: int = Field(..., gt=0, description="Duración en minutos")
     motivo_consulta: Optional[str] = None
     estado: str = Field(default="programado")
+
+    @validator("fecha", pre=True)
+    def normalize_fecha(cls, v):
+        if isinstance(v, str) and len(v) == 10:
+            return f"{v} 00:00:00"
+        return v
 
     @validator("estado")
     def validate_estado(cls, v):
         allowed = {"programado", "completado", "cancelado", "ausente"}
         if v not in allowed:
-            raise ValueError(f"Estado inválido. Valores permitidos: {allowed}")
+            raise ValueError(f"Estado invalido. Valores permitidos: {allowed}")
         return v
 
 
 class Appointment(AppointmentCreate):
     id: int
+    duracion: int
 
 
 class AppointmentUpdateStatus(BaseModel):
@@ -79,7 +101,7 @@ class AppointmentUpdateStatus(BaseModel):
     def validate_estado(cls, v):
         allowed = {"programado", "completado", "cancelado", "ausente"}
         if v not in allowed:
-            raise ValueError(f"Estado inválido. Valores permitidos: {allowed}")
+            raise ValueError(f"Estado invalido. Valores permitidos: {allowed}")
         return v
 
 
