@@ -1,6 +1,36 @@
 import sqlite3
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from typing import Dict, List, Optional
+
+
+def _next_weekday(start: date, weekday: int) -> date:
+    days_ahead = (weekday - start.weekday()) % 7
+    return start + timedelta(days=days_ahead)
+
+
+def _ensure_fecha_column(conn: sqlite3.Connection) -> None:
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA table_info(disponibilidad_medicos)")
+    cols = [row["name"] for row in cursor.fetchall()]
+    if "fecha" in cols:
+        cursor.close()
+        return
+    cursor.execute("ALTER TABLE disponibilidad_medicos ADD COLUMN fecha TEXT")
+    conn.commit()
+    cursor.execute("SELECT id, dia_semana FROM disponibilidad_medicos")
+    rows = cursor.fetchall()
+    today = date.today()
+    for row in rows:
+        dia = row["dia_semana"]
+        if dia is None:
+            continue
+        target = _next_weekday(today, int(dia))
+        cursor.execute(
+            "UPDATE disponibilidad_medicos SET fecha = ? WHERE id = ?",
+            (target.isoformat(), row["id"]),
+        )
+    conn.commit()
+    cursor.close()
 
 
 def _has_overlap(
@@ -11,6 +41,7 @@ def _has_overlap(
     end_str: str,
 ) -> bool:
     """Verifica si el rango [start, end) se superpone con otra disponibilidad del mismo medico y fecha."""
+    _ensure_fecha_column(conn)
     try:
         new_start = datetime.strptime(start_str, "%H:%M").time()
         new_end = datetime.strptime(end_str, "%H:%M").time()
@@ -43,10 +74,15 @@ def _has_overlap(
 
 
 def create_availability(conn: sqlite3.Connection, data: Dict) -> int:
+    _ensure_fecha_column(conn)
+    fecha = data["fecha"]
+    if isinstance(fecha, date):
+        fecha = fecha.isoformat()
+
     if _has_overlap(
         conn,
         data["medico_id"],
-        data["fecha"],
+        fecha,
         data["hora_inicio"],
         data["hora_fin"],
     ):
@@ -58,7 +94,7 @@ def create_availability(conn: sqlite3.Connection, data: Dict) -> int:
         INSERT INTO disponibilidad_medicos (medico_id, fecha, hora_inicio, hora_fin)
         VALUES (?, ?, ?, ?)
         """,
-        (data["medico_id"], data["fecha"], data["hora_inicio"], data["hora_fin"]),
+        (data["medico_id"], fecha, data["hora_inicio"], data["hora_fin"]),
     )
     conn.commit()
     new_id = cursor.lastrowid

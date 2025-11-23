@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field, validator
@@ -36,9 +36,21 @@ class Doctor(DoctorCreate):
 
 class AvailabilityCreate(BaseModel):
     medico_id: int
-    fecha: date
+    fecha: Optional[date] = None
+    dia_semana: Optional[int] = Field(None, ge=0, le=6, description="0=lunes, 6=domingo (legado)")
     hora_inicio: str = Field(..., regex=r"^\d{2}:\d{2}$")
     hora_fin: str = Field(..., regex=r"^\d{2}:\d{2}$")
+
+    @validator("fecha", always=True)
+    def ensure_fecha(cls, v, values):
+        if v:
+            return v
+        dia = values.get("dia_semana")
+        if dia is None:
+            raise ValueError("Debe enviar fecha o dia_semana")
+        today = date.today()
+        days_ahead = (dia - today.weekday()) % 7
+        return today + timedelta(days=days_ahead)
 
     @validator("hora_inicio")
     def validate_hora_inicio(cls, v):
