@@ -1,3 +1,4 @@
+import os
 import sqlite3
 from datetime import datetime
 from typing import List, Optional
@@ -23,6 +24,13 @@ from app.services.reminder import ReminderService
 from app.services import reports
 from app.security import create_access_token, decode_token, verify_password
 
+# Carga .env si esta disponible, sin forzar dependencia en entornos donde no se instalo python-dotenv.
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:
+    pass
 
 app = FastAPI(
     title="Consultorio Medico API",
@@ -30,7 +38,6 @@ app = FastAPI(
     description="Backend FastAPI + SQLite sin ORM. ABM y reportes de turnos medicos.",
 )
 
-# Permite que el frontend consuma la API sin problemas.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -39,7 +46,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-email_client = EmailClient(dry_run=True)
+email_client = EmailClient(
+    dry_run=os.getenv("SMTP_DRY_RUN", "true").lower() == "true"
+)
 reminder_service = ReminderService(email_client)
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -224,7 +233,10 @@ def delete_doctor(doctor_id: int, conn: sqlite3.Connection = Depends(get_connect
 def create_availability(
     payload: schemas.AvailabilityCreate, conn: sqlite3.Connection = Depends(get_connection)
 ):
-    new_id = availability.create_availability(conn, payload.dict())
+    try:
+        new_id = availability.create_availability(conn, payload.dict())
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     return {"id": new_id, **payload.dict()}
 
 
@@ -262,12 +274,16 @@ def create_appointment(
     turno = appointments.get_appointment(conn, new_id)
     appointment_dt = datetime.fromisoformat(turno["fecha"])
     patient_full_name = f"{turno['paciente_nombre']} {turno['paciente_apellido']}"
+    doctor_full_name = f"{turno['medico_nombre']} {turno['medico_apellido']}"
+    specialty_name = turno["especialidad_nombre"]
     # Desacoplar envío usando BackgroundTasks.
     background_tasks.add_task(
         reminder_service.schedule_reminders,
         appointment_dt,
         patient_full_name,
         turno["paciente_mail"],
+        doctor_full_name,
+        specialty_name,
     )
     return {**turno}
 
