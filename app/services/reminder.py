@@ -50,7 +50,7 @@ class ReminderService:
         time_str = appointment_dt.strftime("%H:%M")
         confirmation_msg = (
             f"Confirmamos su reserva del turno con {doctor_name} de {specialty} el {date_str} a las {time_str}.\n"
-            "Lo esperamos!\nConsultorio Médico Privado - Chacabuco 1244, Nueva Córdoba, Córdoba."
+            "Lo esperamos!\nMediFlow - Chacabuco 1244, Nueva Cordoba, Cordoba."
         )
         subject.notify(f"Hola {patient_name},\n\n{confirmation_msg}")
 
@@ -64,7 +64,7 @@ class ReminderService:
                 f"Hola {patient_name},\n\n"
                 f"Falta {self._humanize_delta(lead)} para tu turno con {doctor_name} de {specialty} "
                 f"el {date_str} a las {time_str}.\n"
-                "Lo esperamos!\nConsultorio Médico Privado - Chacabuco 1244, Nueva Córdoba, Córdoba."
+                "Lo esperamos!\nMediFlow - Chacabuco 1244, Nueva Cordoba, Cordoba."
             )
             timer = threading.Timer(delay_seconds, subject.notify, args=(message,))
             timer.daemon = True
@@ -77,7 +77,7 @@ class ReminderService:
         minutes = int(delta.total_seconds() // 60)
         if minutes % 1440 == 0:
             days = minutes // 1440
-            return f"{days} día" + ("s" if days > 1 else "")
+            return f"{days} dia" + ("s" if days > 1 else "")
         if minutes % 60 == 0:
             hours = minutes // 60
             return f"{hours} hora" + ("s" if hours > 1 else "")

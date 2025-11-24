@@ -19,6 +19,7 @@ from app.repositories import (
     specialties,
     admins,
 )
+from app.routes import history
 from app.services.email_client import EmailClient
 from app.services.reminder import ReminderService
 from app.services import reports
@@ -33,9 +34,9 @@ except ImportError:
     pass
 
 app = FastAPI(
-    title="Consultorio Medico API",
+    title="MediFlow API",
     version="1.1.0",
-    description="Backend FastAPI + SQLite sin ORM. ABM y reportes de turnos medicos.",
+    description="Backend FastAPI + SQLite sin ORM para la gestion de turnos medicos MediFlow.",
 )
 
 app.add_middleware(
@@ -51,6 +52,7 @@ email_client = EmailClient(
 )
 reminder_service = ReminderService(email_client)
 bearer_scheme = HTTPBearer(auto_error=False)
+app.include_router(history.router)
 
 OPEN_PATHS = {
     "/health",
@@ -354,11 +356,9 @@ def report_appointments_by_doctor(
 
 @app.get("/reportes/turnos-por-especialidad")
 def report_count_by_specialty(
-    fecha_inicio: datetime,
-    fecha_fin: datetime,
     conn: sqlite3.Connection = Depends(get_connection),
 ):
-    data = reports.count_by_specialty(conn, fecha_inicio, fecha_fin)
+    data = reports.count_by_specialty(conn)
     return {"items": data}
 
 

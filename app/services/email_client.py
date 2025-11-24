@@ -20,7 +20,7 @@ class EmailClient:
         self.smtp_port = smtp_port or int(os.getenv("SMTP_PORT", "25"))
         self.username = username or os.getenv("SMTP_USERNAME", os.getenv("SMTP_USER"))
         self.password = password or os.getenv("SMTP_PASSWORD", os.getenv("SMTP_PASS"))
-        self.sender = sender or os.getenv("EMAIL_SENDER", self.username or "no-reply@clinic.local")
+        self.sender = sender or os.getenv("EMAIL_SENDER", self.username or "no-reply@mediflow.local")
 
         env_dry_run = os.getenv("SMTP_DRY_RUN")
         if dry_run is not None:

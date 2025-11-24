@@ -8,11 +8,22 @@ class PatientCreate(BaseModel):
     dni: str = Field(..., min_length=6)
     nombre: str
     apellido: str
-    mail: EmailStr
+    mail: str
+
+    @validator("mail")
+    def validate_mail(cls, v: str):
+        # Validar formato basico sin bloquear datos historicos en responses.
+        if "@" not in v or v.startswith("@") or v.endswith("@"):
+            raise ValueError("mail debe tener formato de email")
+        return v
 
 
-class Patient(PatientCreate):
+class Patient(BaseModel):
     id: int
+    dni: str
+    nombre: str
+    apellido: str
+    mail: str
 
 
 class SpecialtyCreate(BaseModel):
@@ -82,7 +93,7 @@ class Availability(AvailabilityCreate):
 class AppointmentCreate(BaseModel):
     paciente_id: int
     medico_id: int
-    disponibilidad_id: int
+    disponibilidad_id: Optional[int] = None
     fecha: datetime
     motivo_consulta: Optional[str] = None
     estado: str = Field(default="programado")
@@ -121,10 +132,28 @@ class ClinicalRecordCreate(BaseModel):
     paciente_id: int
     turno_id: Optional[int] = None
     descripcion: str
+    estado: str = "programado"
+    fecha_turno: Optional[datetime] = None
+
+    @validator("estado")
+    def validate_estado(cls, v):
+        allowed = {"programado", "completado", "cancelado", "ausente"}
+        if v not in allowed:
+            raise ValueError(f"Estado invalido. Valores permitidos: {allowed}")
+        return v
+
+    @validator("fecha_turno", pre=True)
+    def normalize_fecha_turno(cls, v):
+        if isinstance(v, str) and len(v) == 10:
+            return f"{v} 00:00:00"
+        return v
 
 
 class ClinicalRecord(ClinicalRecordCreate):
     id: int
+    medico_nombre: Optional[str] = None
+    medico_apellido: Optional[str] = None
+    especialidad: Optional[str] = None
 
 
 class PrescriptionCreate(BaseModel):
