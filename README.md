@@ -28,7 +28,7 @@ Incluye pruebas de autenticacion, reglas de turnos y CRUD de pacientes. Cada tes
 ## Configuracion via .env
 Crea un archivo `.env` en la raiz con, por ejemplo:
 ```
-DATABASE_URL=data/mediflow.db
+DATABASE_URL=data/clinic.db
 SECRET_KEY=changeme
 PASSWORD_SALT=changeme
 ACCESS_TOKEN_EXPIRE_MINUTES=60
