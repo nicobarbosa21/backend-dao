@@ -1,4 +1,4 @@
-# Consultorio Medico
+# MediFlow API
 
 ## Instalacion y ejecucion
 ```bash
@@ -28,18 +28,18 @@ Incluye pruebas de autenticacion, reglas de turnos y CRUD de pacientes. Cada tes
 ## Configuracion via .env
 Crea un archivo `.env` en la raiz con, por ejemplo:
 ```
-DATABASE_URL=data/clinic.db
+DATABASE_URL=data/mediflow.db
 SECRET_KEY=changeme
 PASSWORD_SALT=changeme
 ACCESS_TOKEN_EXPIRE_MINUTES=60
 
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
-SMTP_USER=clinicamedicachacabuco@gmail.com
+SMTP_USER=mediflow@gmail.com
 SMTP_PASS=ppgi lauj rkcn lcnh
 SMTP_USE_SSL=true
 SMTP_DRY_RUN=false
-EMAIL_SENDER=clinicamedicachacabuco@gmail.com
+EMAIL_SENDER=mediflow@gmail.com
 ```
 Las variables del `.env` se cargan automaticamente al iniciar la app.
 

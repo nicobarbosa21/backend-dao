@@ -29,9 +29,7 @@ def appointments_by_doctor(
     return [dict(row) for row in rows]
 
 
-def count_by_specialty(
-    conn: sqlite3.Connection, start: datetime, end: datetime
-) -> List[dict]:
+def count_by_specialty(conn: sqlite3.Connection) -> List[dict]:
     cursor = conn.cursor()
     cursor.execute(
         """
@@ -39,11 +37,9 @@ def count_by_specialty(
         FROM turnos t
         JOIN medicos m ON t.medico_id = m.id
         JOIN especialidades e ON m.especialidad_id = e.id
-        WHERE datetime(t.fecha) BETWEEN datetime(?) AND datetime(?)
         GROUP BY e.id
-        ORDER BY cantidad DESC
-        """,
-        (start.isoformat(sep=" "), end.isoformat(sep=" ")),
+        ORDER BY cantidad DESC, e.nombre
+        """
     )
     rows = cursor.fetchall()
     cursor.close()
