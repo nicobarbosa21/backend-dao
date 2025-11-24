@@ -121,10 +121,28 @@ class ClinicalRecordCreate(BaseModel):
     paciente_id: int
     turno_id: Optional[int] = None
     descripcion: str
+    estado: str = "programado"
+    fecha_turno: Optional[datetime] = None
+
+    @validator("estado")
+    def validate_estado(cls, v):
+        allowed = {"programado", "completado", "cancelado", "ausente"}
+        if v not in allowed:
+            raise ValueError(f"Estado invalido. Valores permitidos: {allowed}")
+        return v
+
+    @validator("fecha_turno", pre=True)
+    def normalize_fecha_turno(cls, v):
+        if isinstance(v, str) and len(v) == 10:
+            return f"{v} 00:00:00"
+        return v
 
 
 class ClinicalRecord(ClinicalRecordCreate):
     id: int
+    medico_nombre: Optional[str] = None
+    medico_apellido: Optional[str] = None
+    especialidad: Optional[str] = None
 
 
 class PrescriptionCreate(BaseModel):

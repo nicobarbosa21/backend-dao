@@ -33,9 +33,9 @@ except ImportError:
     pass
 
 app = FastAPI(
-    title="Consultorio Medico API",
+    title="MediFlow API",
     version="1.1.0",
-    description="Backend FastAPI + SQLite sin ORM. ABM y reportes de turnos medicos.",
+    description="Backend FastAPI + SQLite sin ORM para la gestion de turnos medicos MediFlow.",
 )
 
 app.add_middleware(
@@ -354,11 +354,9 @@ def report_appointments_by_doctor(
 
 @app.get("/reportes/turnos-por-especialidad")
 def report_count_by_specialty(
-    fecha_inicio: datetime,
-    fecha_fin: datetime,
     conn: sqlite3.Connection = Depends(get_connection),
 ):
-    data = reports.count_by_specialty(conn, fecha_inicio, fecha_fin)
+    data = reports.count_by_specialty(conn)
     return {"items": data}
 
 

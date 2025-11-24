@@ -2,6 +2,8 @@ import sqlite3
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
+from app.repositories import clinical_history
+
 
 def _validate_slot_selection(
     conn: sqlite3.Connection, medico_id: int, availability_id: int, target_date: datetime
@@ -101,8 +103,17 @@ def create_appointment(conn: sqlite3.Connection, data: Dict) -> int:
         "UPDATE disponibilidad_medicos SET activa = 0 WHERE id = ?",
         (data["disponibilidad_id"],),
     )
-    conn.commit()
     new_id = cursor.lastrowid
+    clinical_history.upsert_from_appointment(
+        conn,
+        turno_id=new_id,
+        paciente_id=data["paciente_id"],
+        estado=data["estado"],
+        fecha_turno=start_dt,
+        descripcion=data.get("motivo_consulta") or "Turno creado",
+        commit=False,
+    )
+    conn.commit()
     cursor.close()
     return new_id
 
@@ -138,7 +149,7 @@ def list_appointments(conn: sqlite3.Connection, medico_id: Optional[int] = None)
 def update_status(conn: sqlite3.Connection, appointment_id: int, estado: str) -> bool:
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT disponibilidad_id, estado FROM turnos WHERE id = ?",
+        "SELECT disponibilidad_id, estado, paciente_id, fecha FROM turnos WHERE id = ?",
         (appointment_id,),
     )
     current = cursor.fetchone()
@@ -147,6 +158,8 @@ def update_status(conn: sqlite3.Connection, appointment_id: int, estado: str) ->
         return False
     disponibilidad_id = current["disponibilidad_id"]
     previous_estado = current["estado"]
+    paciente_id = current["paciente_id"]
+    fecha_turno = current["fecha"]
 
     cursor.execute(
         "UPDATE turnos SET estado = ? WHERE id = ?",
@@ -164,6 +177,15 @@ def update_status(conn: sqlite3.Connection, appointment_id: int, estado: str) ->
                 "UPDATE disponibilidad_medicos SET activa = 0 WHERE id = ?",
                 (disponibilidad_id,),
             )
+    clinical_history.upsert_from_appointment(
+        conn,
+        turno_id=appointment_id,
+        paciente_id=paciente_id,
+        estado=estado,
+        fecha_turno=fecha_turno,
+        descripcion=f"Estado actualizado a {estado}",
+        commit=False,
+    )
     conn.commit()
     cursor.close()
     return updated
