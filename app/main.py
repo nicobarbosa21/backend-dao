@@ -19,6 +19,7 @@ from app.repositories import (
     specialties,
     admins,
 )
+from app.routes import history
 from app.services.email_client import EmailClient
 from app.services.reminder import ReminderService
 from app.services import reports
@@ -51,6 +52,7 @@ email_client = EmailClient(
 )
 reminder_service = ReminderService(email_client)
 bearer_scheme = HTTPBearer(auto_error=False)
+app.include_router(history.router)
 
 OPEN_PATHS = {
     "/health",

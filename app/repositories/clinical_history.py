@@ -83,10 +83,9 @@ def upsert_from_appointment(
     cursor.close()
 
 
-def list_records(conn: sqlite3.Connection, paciente_id: int) -> List[dict]:
+def list_records(conn: sqlite3.Connection, paciente_id: Optional[int]) -> List[dict]:
     cursor = conn.cursor()
-    cursor.execute(
-        """
+    base_query = """
         SELECT
             h.id,
             h.paciente_id,
@@ -101,11 +100,13 @@ def list_records(conn: sqlite3.Connection, paciente_id: int) -> List[dict]:
         LEFT JOIN turnos t ON h.turno_id = t.id
         LEFT JOIN medicos m ON t.medico_id = m.id
         LEFT JOIN especialidades e ON m.especialidad_id = e.id
-        WHERE h.paciente_id = ?
-        ORDER BY datetime(h.fecha_turno) DESC, h.id DESC
-        """,
-        (paciente_id,),
-    )
+    """
+    params = ()
+    if paciente_id is not None:
+        base_query += " WHERE h.paciente_id = ?"
+        params = (paciente_id,)
+    base_query += " ORDER BY datetime(h.fecha_turno) DESC, h.id DESC"
+    cursor.execute(base_query, params)
     rows = cursor.fetchall()
     cursor.close()
     return [dict(row) for row in rows]
