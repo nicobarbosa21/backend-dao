@@ -15,12 +15,11 @@ class Database:
     _lock = threading.Lock()
 
     def __new__(cls, db_path: Optional[str] = None):
-        # Soporta reinicializar con otro path llamando a reset_instance.
         with cls._lock:
             if cls._instance is None:
                 cls._instance = super().__new__(cls)
                 cls._instance.db_path = db_path or os.getenv(
-                    "DATABASE_URL", str(Path("data") / "mediflow.db")
+                    "DATABASE_URL", str(Path("data") / "clinic.db")
                 )
                 Path(cls._instance.db_path).parent.mkdir(parents=True, exist_ok=True)
                 cls._instance.conn = sqlite3.connect(
