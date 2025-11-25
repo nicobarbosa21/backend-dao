@@ -1,5 +1,5 @@
 import sqlite3
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 
 def create_prescription(conn: sqlite3.Connection, data: Dict) -> int:
@@ -32,3 +32,45 @@ def list_prescriptions(conn: sqlite3.Connection, paciente_id: int) -> List[dict]
     rows = cursor.fetchall()
     cursor.close()
     return [dict(row) for row in rows]
+
+
+def list_all_prescriptions(conn: sqlite3.Connection) -> List[dict]:
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT r.*, m.nombre as medico_nombre, m.apellido as medico_apellido, p.nombre as paciente_nombre, p.apellido as paciente_apellido
+        FROM recetas r
+        JOIN medicos m ON r.medico_id = m.id
+        JOIN pacientes p ON r.paciente_id = p.id
+        ORDER BY r.id DESC
+        """
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    return [dict(row) for row in rows]
+
+
+def get_prescription(conn: sqlite3.Connection, prescription_id: int) -> Optional[dict]:
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT r.*, m.nombre as medico_nombre, m.apellido as medico_apellido, p.nombre as paciente_nombre, p.apellido as paciente_apellido
+        FROM recetas r
+        JOIN medicos m ON r.medico_id = m.id
+        JOIN pacientes p ON r.paciente_id = p.id
+        WHERE r.id = ?
+        """,
+        (prescription_id,),
+    )
+    row = cursor.fetchone()
+    cursor.close()
+    return dict(row) if row else None
+
+
+def delete_prescription(conn: sqlite3.Connection, prescription_id: int) -> bool:
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM recetas WHERE id = ?", (prescription_id,))
+    conn.commit()
+    deleted = cursor.rowcount > 0
+    cursor.close()
+    return deleted

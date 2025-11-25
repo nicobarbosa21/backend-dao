@@ -21,6 +21,7 @@ from app.repositories import (
 )
 from app.routes import history
 from app.services.email_client import EmailClient
+from app.services.prescription_notifier import PrescriptionNotifier
 from app.services.reminder import ReminderService
 from app.services import reports
 from app.security import create_access_token, decode_token, verify_password
@@ -51,6 +52,7 @@ email_client = EmailClient(
     dry_run=os.getenv("SMTP_DRY_RUN", "true").lower() == "true"
 )
 reminder_service = ReminderService(email_client)
+prescription_notifier = PrescriptionNotifier(email_client)
 bearer_scheme = HTTPBearer(auto_error=False)
 app.include_router(history.router)
 
@@ -327,12 +329,53 @@ def list_history(
 
 
 # --- Recetas ---
+@app.get("/recetas", response_model=List[schemas.Prescription])
+def list_all_prescriptions(conn: sqlite3.Connection = Depends(get_connection)):
+    return prescriptions.list_all_prescriptions(conn)
+
+
+@app.get("/recetas/{prescription_id}", response_model=schemas.Prescription)
+def get_prescription(
+    prescription_id: int, conn: sqlite3.Connection = Depends(get_connection)
+):
+    prescription = prescriptions.get_prescription(conn, prescription_id)
+    if not prescription:
+        raise HTTPException(status_code=404, detail="Receta no encontrada.")
+    return prescription
+
+
 @app.post("/recetas", response_model=schemas.Prescription)
 def create_prescription(
-    payload: schemas.PrescriptionCreate, conn: sqlite3.Connection = Depends(get_connection)
+    payload: schemas.PrescriptionCreate,
+    background_tasks: BackgroundTasks,
+    conn: sqlite3.Connection = Depends(get_connection),
 ):
+    patient = patients.get_patient(conn, payload.paciente_id)
+    doctor = doctors.get_doctor(conn, payload.medico_id)
+    if not patient or not doctor:
+        raise HTTPException(status_code=404, detail="Paciente o medico no encontrado.")
+
     new_id = prescriptions.create_prescription(conn, payload.dict())
+    patient_name = f"{patient['nombre']} {patient['apellido']}"
+    doctor_name = f"{doctor['nombre']} {doctor['apellido']}"
+    background_tasks.add_task(
+        prescription_notifier.notify_prescription,
+        patient_name,
+        patient["mail"],
+        doctor_name,
+        payload.descripcion,
+    )
     return {"id": new_id, **payload.dict()}
+
+
+@app.delete("/recetas/{prescription_id}")
+def delete_prescription(
+    prescription_id: int, conn: sqlite3.Connection = Depends(get_connection)
+):
+    deleted = prescriptions.delete_prescription(conn, prescription_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Receta no encontrada.")
+    return {"deleted": True}
 
 
 @app.get("/pacientes/{patient_id}/recetas", response_model=List[schemas.Prescription])
