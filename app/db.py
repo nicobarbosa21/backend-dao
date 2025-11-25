@@ -228,18 +228,18 @@ def init_db() -> None:
     availability_rows: List[dict] = []
     cursor.execute("SELECT COUNT(*) as total FROM disponibilidad_medicos")
     if cursor.fetchone()["total"] == 0:
-        today = date.today()
+        seed_start = date.today() - timedelta(days=30)
         availability_seed = [
-            {"doctor": "Suarez", "fecha": _next_weekday(today, 0), "inicio": "09:00", "fin": "12:00"},
-            {"doctor": "Suarez", "fecha": _next_weekday(today, 2), "inicio": "14:00", "fin": "17:00"},
-            {"doctor": "Lopez", "fecha": _next_weekday(today, 1), "inicio": "10:00", "fin": "13:00"},
-            {"doctor": "Lopez", "fecha": _next_weekday(today, 4), "inicio": "09:00", "fin": "11:00"},
-            {"doctor": "Gimenez", "fecha": _next_weekday(today, 3), "inicio": "08:30", "fin": "12:00"},
-            {"doctor": "Gimenez", "fecha": _next_weekday(today, 5), "inicio": "14:00", "fin": "17:00"},
-            {"doctor": "Rios", "fecha": _next_weekday(today, 2), "inicio": "16:00", "fin": "19:00"},
-            {"doctor": "Rios", "fecha": _next_weekday(today, 5), "inicio": "08:00", "fin": "10:00"},
-            {"doctor": "Castro", "fecha": _next_weekday(today, 1), "inicio": "08:00", "fin": "12:00"},
-            {"doctor": "Castro", "fecha": _next_weekday(today, 4), "inicio": "13:00", "fin": "16:00"},
+            {"doctor": "Suarez", "fecha": _next_weekday(seed_start, 0), "inicio": "09:00", "fin": "12:00"},
+            {"doctor": "Suarez", "fecha": _next_weekday(seed_start, 2), "inicio": "14:00", "fin": "17:00"},
+            {"doctor": "Lopez", "fecha": _next_weekday(seed_start, 1), "inicio": "10:00", "fin": "13:00"},
+            {"doctor": "Lopez", "fecha": _next_weekday(seed_start, 4), "inicio": "09:00", "fin": "11:00"},
+            {"doctor": "Gimenez", "fecha": _next_weekday(seed_start, 3), "inicio": "08:30", "fin": "12:00"},
+            {"doctor": "Gimenez", "fecha": _next_weekday(seed_start, 5), "inicio": "14:00", "fin": "17:00"},
+            {"doctor": "Rios", "fecha": _next_weekday(seed_start, 2), "inicio": "16:00", "fin": "19:00"},
+            {"doctor": "Rios", "fecha": _next_weekday(seed_start, 5), "inicio": "08:00", "fin": "10:00"},
+            {"doctor": "Castro", "fecha": _next_weekday(seed_start, 1), "inicio": "08:00", "fin": "12:00"},
+            {"doctor": "Castro", "fecha": _next_weekday(seed_start, 4), "inicio": "13:00", "fin": "16:00"},
         ]
         for slot in availability_seed:
             medico_id = doctors_map.get(slot["doctor"])
