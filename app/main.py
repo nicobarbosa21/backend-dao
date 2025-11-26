@@ -378,8 +378,7 @@ def delete_prescription(
     return {"deleted": True}
 
 
-@app.get("/pacientes/{patient_id}/recetas")
-#@app.get("/pacientes/{patient_id}/recetas", response_model=List[schemas.Prescription])
+@app.get("/pacientes/{patient_id}/recetas", response_model=List[schemas.Prescription])
 def list_prescriptions(
     patient_id: int, conn: sqlite3.Connection = Depends(get_connection)
 ):
