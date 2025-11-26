@@ -160,8 +160,6 @@ class PrescriptionCreate(BaseModel):
     medico_id: int
     paciente_id: int
     descripcion: str
-    medico_nombre: str
-    medico_apellido: str
 
 
 class Prescription(PrescriptionCreate):
