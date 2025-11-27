@@ -12,6 +12,7 @@ uvicorn app.main:app --reload
 
 ## Variables de entorno
 - Crear un archivo .env en la raíz del backend con estas variables:
+```
 DATABASE_URL=data/clinic.db
 SECRET_KEY=changeme
 PASSWORD_SALT=changeme
@@ -24,6 +25,7 @@ SMTP_PASS=ppgi lauj rkcn lcnh
 SMTP_USE_SSL=true
 SMTP_DRY_RUN=false
 EMAIL_SENDER=clinicamedicachacabuco@gmail.com
+```
 
 ## Tests
 ```bash
