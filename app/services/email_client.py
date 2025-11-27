@@ -30,7 +30,6 @@ class EmailClient:
         else:
             self.dry_run = True
 
-        # Usa SSL directo si se pide por env o si el puerto es el tipico 465.
         env_use_ssl = os.getenv("SMTP_USE_SSL")
         if env_use_ssl is not None:
             self.use_ssl = env_use_ssl.lower() == "true"

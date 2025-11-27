@@ -56,7 +56,6 @@ def test_appointment_consumes_availability_and_blocks_reuse(client):
     slot = next(item for item in res_av.json() if item["id"] == availability_id)
     assert slot["activa"] is False
 
-    # Intento reutilizar la misma franja sin cancelar debe fallar.
     res_b = client.post("/turnos", json=turno_a)
     assert res_b.status_code == 400
     assert "disponibilidad" in res_b.json()["detail"].lower()
@@ -86,7 +85,6 @@ def test_update_status_releases_availability_and_reports(client):
     slot = next(item for item in res_av.json() if item["id"] == availability_id)
     assert slot["activa"] is True
 
-    # Reutiliza la misma disponibilidad cancelada para el mismo dia.
     res_second = client.post("/turnos", json=base_turno)
     second_turno = res_second.json()
     res_upd = client.put(

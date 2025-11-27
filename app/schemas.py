@@ -1,7 +1,24 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from typing import Optional
+import re
 
 from pydantic import BaseModel, EmailStr, Field, validator
+
+
+NAME_REGEX = re.compile(r"^[A-Za-z]+$")
+
+
+def _validate_alpha_field(value: str, field_name: str) -> str:
+    if not isinstance(value, str):
+        raise ValueError(f"{field_name} debe ser texto")
+    normalized = value.strip()
+    if not (1 <= len(normalized) <= 20):
+        raise ValueError(f"{field_name} debe tener entre 1 y 20 letras")
+    if not NAME_REGEX.fullmatch(normalized):
+        raise ValueError(
+            f"{field_name} solo puede contener letras (sin numeros ni caracteres especiales)"
+        )
+    return normalized
 
 
 class PatientCreate(BaseModel):
@@ -10,9 +27,12 @@ class PatientCreate(BaseModel):
     apellido: str
     mail: str
 
+    @validator("nombre", "apellido")
+    def validate_alpha_names(cls, v, field):
+        return _validate_alpha_field(v, field.name)
+
     @validator("mail")
     def validate_mail(cls, v: str):
-        # Validar formato basico sin bloquear datos historicos en responses.
         if "@" not in v or v.startswith("@") or v.endswith("@"):
             raise ValueError("mail debe tener formato de email")
         return v
@@ -29,6 +49,10 @@ class Patient(BaseModel):
 class SpecialtyCreate(BaseModel):
     nombre: str
 
+    @validator("nombre")
+    def validate_nombre(cls, v):
+        return _validate_alpha_field(v, "nombre")
+
 
 class Specialty(SpecialtyCreate):
     id: int
@@ -40,6 +64,10 @@ class DoctorCreate(BaseModel):
     especialidad_id: int
     mail: EmailStr
 
+    @validator("nombre", "apellido")
+    def validate_doctor_names(cls, v, field):
+        return _validate_alpha_field(v, field.name)
+
 
 class Doctor(DoctorCreate):
     id: int
@@ -47,21 +75,9 @@ class Doctor(DoctorCreate):
 
 class AvailabilityCreate(BaseModel):
     medico_id: int
-    fecha: Optional[date] = None
-    dia_semana: Optional[int] = Field(None, ge=0, le=6, description="0=lunes, 6=domingo (legado)")
+    fecha: date
     hora_inicio: str = Field(..., regex=r"^\d{2}:\d{2}$")
     hora_fin: str = Field(..., regex=r"^\d{2}:\d{2}$")
-
-    @validator("fecha", always=True)
-    def ensure_fecha(cls, v, values):
-        if v:
-            return v
-        dia = values.get("dia_semana")
-        if dia is None:
-            raise ValueError("Debe enviar fecha o dia_semana")
-        today = date.today()
-        days_ahead = (dia - today.weekday()) % 7
-        return today + timedelta(days=days_ahead)
 
     @validator("hora_inicio")
     def validate_hora_inicio(cls, v):

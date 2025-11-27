@@ -106,12 +106,12 @@ def list_availability(conn: sqlite3.Connection, medico_id: Optional[int] = None)
     cursor = conn.cursor()
     if medico_id:
         cursor.execute(
-            "SELECT * FROM disponibilidad_medicos WHERE medico_id = ? ORDER BY fecha, hora_inicio",
+            "SELECT id, medico_id, fecha, hora_inicio, hora_fin, activa FROM disponibilidad_medicos WHERE medico_id = ? ORDER BY fecha, hora_inicio",
             (medico_id,),
         )
     else:
         cursor.execute(
-            "SELECT * FROM disponibilidad_medicos ORDER BY medico_id, fecha, hora_inicio"
+            "SELECT id, medico_id, fecha, hora_inicio, hora_fin, activa FROM disponibilidad_medicos ORDER BY medico_id, fecha, hora_inicio"
         )
     rows = cursor.fetchall()
     cursor.close()
@@ -130,7 +130,7 @@ def delete_availability(conn: sqlite3.Connection, availability_id: int) -> bool:
 def get_availability(conn: sqlite3.Connection, availability_id: int) -> Optional[dict]:
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT * FROM disponibilidad_medicos WHERE id = ?",
+        "SELECT id, medico_id, fecha, hora_inicio, hora_fin, activa FROM disponibilidad_medicos WHERE id = ?",
         (availability_id,),
     )
     row = cursor.fetchone()

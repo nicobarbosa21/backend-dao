@@ -59,7 +59,7 @@ class ReminderService:
         for lead in self.lead_times:
             delay_seconds = (appointment_dt - lead - now).total_seconds()
             if delay_seconds <= 0:
-                continue  # No duplicar recordatorios pasados
+                continue
             message = (
                 f"Hola {patient_name},\n\n"
                 f"Falta {self._humanize_delta(lead)} para tu turno con {doctor_name} de {specialty} "

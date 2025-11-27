@@ -8,7 +8,6 @@ from app.main import app
 
 @pytest.fixture(autouse=True)
 def setup_db(tmp_path):
-    # Base SQLite aislada por test.
     db_path = tmp_path / "test.db"
     os.environ["ADMIN_DEFAULT_PASSWORD"] = "admin123"
     os.environ["DATABASE_URL"] = str(db_path)

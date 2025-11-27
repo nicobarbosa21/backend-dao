@@ -8,7 +8,6 @@ from app.repositories import clinical_history
 def _validate_slot_selection(
     conn: sqlite3.Connection, medico_id: int, availability_id: int, target_date: datetime
 ) -> Tuple[bool, Optional[datetime], Optional[int], str]:
-    """Valida que la disponibilidad exista, pertenezca al medico y este libre."""
     cursor = conn.cursor()
     cursor.execute(
         """
