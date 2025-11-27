@@ -10,7 +10,6 @@ from app.security import hash_password
 
 class Database:
     """Singleton para manejar una unica conexion a la BD."""
-
     _instance = None
     _lock = threading.Lock()
 
@@ -42,7 +41,6 @@ class Database:
 
     @classmethod
     def reset_instance(cls, db_path: Optional[str] = None) -> "Database":
-        """Permite crear una nueva conexion (util en tests)."""
         if cls._instance:
             try:
                 cls._instance.conn.close()
@@ -53,7 +51,6 @@ class Database:
 
 
 def _next_weekday(start: date, weekday: int) -> date:
-    """Devuelve la proxima fecha (incluyendo hoy) del weekday (0=lunes)."""
     days_ahead = (weekday - start.weekday()) % 7
     return start + timedelta(days=days_ahead)
 
@@ -140,7 +137,6 @@ def init_db() -> None:
         cursor.execute(f"PRAGMA table_info({table})")
         return any(row["name"] == column for row in cursor.fetchall())
 
-    # Migraciones livianas para entornos ya creados.
     if not _column_exists("disponibilidad_medicos", "activa"):
         cursor.execute(
             "ALTER TABLE disponibilidad_medicos ADD COLUMN activa INTEGER NOT NULL DEFAULT 1"
@@ -168,7 +164,6 @@ def init_db() -> None:
         cursor.execute("ALTER TABLE historial_clinico ADD COLUMN fecha_turno TEXT")
     conn.commit()
 
-    # Datos de prueba enriquecidos si la base esta vacia.
     cursor.execute("SELECT COUNT(*) as total FROM especialidades")
     if cursor.fetchone()["total"] == 0:
         specialties = [
