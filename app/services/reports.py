@@ -83,7 +83,7 @@ def attendance_stats(
     cursor.close()
     stats = {row["estado"]: row["cantidad"] for row in rows}
     asistencia = stats.get("completado", 0)
-    inasistencia = stats.get("ausente", 0) + stats.get("cancelado", 0)
+    inasistencia = stats.get("ausente", 0) # + stats.get("cancelado", 0)
     return {
         "asistencias": asistencia,
         "inasistencias": inasistencia,
