@@ -28,7 +28,7 @@ class EmailClient:
         elif env_dry_run is not None:
             self.dry_run = env_dry_run.lower() == "true"
         else:
-            self.dry_run = True
+            self.dry_run = False
 
         env_use_ssl = os.getenv("SMTP_USE_SSL")
         if env_use_ssl is not None:

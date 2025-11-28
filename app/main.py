@@ -26,7 +26,6 @@ from app.services.reminder import ReminderService
 from app.services import reports
 from app.security import create_access_token, decode_token, verify_password
 
-# Carga .env si esta disponible, sin forzar dependencia en entornos donde no se instalo python-dotenv.
 try:
     from dotenv import load_dotenv
 
@@ -37,7 +36,7 @@ except ImportError:
 app = FastAPI(
     title="MediFlow API",
     version="1.1.0",
-    description="Backend FastAPI + SQLite sin ORM para la gestion de turnos medicos MediFlow.",
+    description="Backend FastAPI + SQLite para la gestion de turnos medicos MediFlow.",
 )
 
 app.add_middleware(
@@ -48,9 +47,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-email_client = EmailClient(
-    dry_run=os.getenv("SMTP_DRY_RUN", "true").lower() == "true"
-)
+email_client = EmailClient()
 reminder_service = ReminderService(email_client)
 prescription_notifier = PrescriptionNotifier(email_client)
 bearer_scheme = HTTPBearer(auto_error=False)
