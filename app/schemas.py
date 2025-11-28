@@ -84,7 +84,7 @@ class AvailabilityCreate(BaseModel):
         try:
             datetime.strptime(v, "%H:%M").time()
         except ValueError:
-            raise ValueError("hora_inicio debe estar entre 00:00 y 23:59 (HH:MM)")
+            raise ValueError("Hora inicio debe estar entre 00:00 y 23:59 (HH:MM)")
         return v
 
     @validator("hora_fin")
@@ -94,10 +94,10 @@ class AvailabilityCreate(BaseModel):
             end_time = datetime.strptime(v, "%H:%M").time()
             start_time = datetime.strptime(start, "%H:%M").time() if start else None
         except ValueError:
-            raise ValueError("hora_fin debe estar entre 00:00 y 23:59 (HH:MM)")
+            raise ValueError("Hora fin debe estar entre 00:00 y 23:59 (HH:MM)")
 
         if start_time and end_time <= start_time:
-            raise ValueError("hora_fin debe ser mayor que hora_inicio")
+            raise ValueError("Hora fin debe ser mayor que hora inicio")
         return v
 
 
