@@ -1,4 +1,6 @@
 # MediFlow API
+## Requerimientos
+- Este proyecto requiere python 3.11
 
 ## Instalacion y ejecucion
 ```bash
